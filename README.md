@@ -6,15 +6,15 @@ A powerful command-line tool to merge multiple Excel files into a single file.
 
 ## Features
 
-- ✅ Merge multiple Excel files into one
-- ✅ Accept individual files or entire directories
-- ✅ Specify custom output filename
-- ✅ Select specific sheet names to merge
-- ✅ **Specify start row** - skip metadata or multiple header rows
-- ✅ **Preserve cell formatting** - maintains currency, dates, and number formats
-- ✅ Automatic header detection and deduplication
-- ✅ Cross-platform support (Linux & Windows)
-- ✅ Progress reporting during merge
+✅ Merge multiple Excel files into one
+✅ Accept individual files or entire directories
+✅ Specify custom output filename
+✅ Select specific sheet names to merge
+✅ **Specify start row** - skip metadata or multiple header rows
+✅ **Preserve cell formatting** - maintains currency, dates, and number formats
+✅ Automatic header detection and deduplication
+✅ Cross-platform support (Linux & Windows)
+✅ Progress reporting during merge
 
 ## Installation
 
