@@ -125,7 +125,7 @@ func printHelp() {
 	fmt.Println()
 	fmt.Println("SUPPORTED FORMATS:")
 	fmt.Println("  - .xlsx files (Excel 2007+) ✓")
-	fmt.Println("  - .xls files (Excel 97-2003) ✓ (auto-converted)")
+	fmt.Println("  - .xls files (Excel 97-2003) ✗ Not supported - please convert to .xlsx first")
 	fmt.Println()
 	fmt.Println("EXAMPLES:")
 	fmt.Println("  # Merge specific files")

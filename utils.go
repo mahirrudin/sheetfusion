@@ -8,10 +8,10 @@ import (
 )
 
 // isExcelFile checks if a file has an Excel extension
-// Supports both .xlsx (Excel 2007+) and .xls (Excel 97-2003)
+// Only .xlsx files (Excel 2007+) are supported
 func isExcelFile(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
-	return ext == ".xlsx" || ext == ".xls"
+	return ext == ".xlsx"
 }
 
 // collectExcelFiles gathers all Excel files from the input specification
@@ -58,7 +58,16 @@ func collectExcelFiles(input string) ([]string, error) {
 		}
 
 		if !isExcelFile(filename) {
-			return nil, fmt.Errorf("not a supported Excel file (.xls or .xlsx): %s", filename)
+			// Check if it's a .xls file and provide conversion guidance
+			if strings.ToLower(filepath.Ext(filename)) == ".xls" {
+				return nil, fmt.Errorf("file %s is in .xls format (Excel 97-2003).\n\n"+
+					"Please convert to .xlsx format first using:\n"+
+					"  - Microsoft Excel: File > Save As > Excel Workbook (.xlsx)\n"+
+					"  - LibreOffice Calc: File > Save As > Excel 2007-365 (.xlsx)\n"+
+					"  - Online converter: https://cloudconvert.com/xls-to-xlsx\n\n"+
+					"Only .xlsx files are supported to ensure data integrity.", filename)
+			}
+			return nil, fmt.Errorf("not a supported Excel file (.xlsx): %s", filename)
 		}
 
 		files = append(files, filename)

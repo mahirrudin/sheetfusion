@@ -4,12 +4,14 @@ A powerful command-line tool to merge multiple Excel files into a single file.
 
 ## Features
 
+## Features
+
 - ✅ Merge multiple Excel files into one
-- ✅ **Automatic .xls to .xlsx conversion** - no manual conversion needed!
 - ✅ Accept individual files or entire directories
 - ✅ Specify custom output filename
 - ✅ Select specific sheet names to merge
 - ✅ **Specify start row** - skip metadata or multiple header rows
+- ✅ **Preserve cell formatting** - maintains currency, dates, and number formats
 - ✅ Automatic header detection and deduplication
 - ✅ Cross-platform support (Linux & Windows)
 - ✅ Progress reporting during merge
@@ -126,11 +128,34 @@ GOOS=windows GOARCH=amd64 go build -o sheetfusion-windows-amd64.exe .
 
 ## Requirements
 
-- Input files must be valid Excel files (`.xlsx` or `.xls`)
-  - **`.xlsx` files** (Excel 2007+) are used directly
-  - **`.xls` files** (Excel 97-2003) are automatically converted to `.xlsx` during processing
+- Input files must be in `.xlsx` format (Excel 2007 or newer)
+  - **`.xls` files (Excel 97-2003) are NOT supported**
+  - To convert `.xls` to `.xlsx`:
+    - Microsoft Excel: File > Save As > Excel Workbook (.xlsx)
+    - LibreOffice Calc: File > Save As > Excel 2007-365 (.xlsx)
+    - Online: https://cloudconvert.com/xls-to-xlsx
 - All files must contain the specified sheet name (if using `-sheet` option)
 - Files should have compatible data structures for meaningful merging
+
+## XLS Conversion Helper Scripts
+
+We provide conversion scripts to help you convert `.xls` files to `.xlsx` format:
+
+### Linux (Bash Script)
+Uses LibreOffice Calc command-line interface:
+```bash
+./convert_xls_to_xlsx.sh input.xls
+./convert_xls_to_xlsx.sh /path/to/directory  # Convert all .xls files
+```
+
+### Windows (PowerShell Script)
+Uses Microsoft Excel COM automation:
+```powershell
+.\convert_xls_to_xlsx.ps1 -Input "input.xls"
+.\convert_xls_to_xlsx.ps1 -Input "C:\path\to\directory"  # Convert all .xls files
+```
+
+**📖 See [CONVERSION_SCRIPTS.md](CONVERSION_SCRIPTS.md) for detailed usage instructions.**
 
 ## Limitations
 

@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -18,27 +16,6 @@ type MergeOptions struct {
 
 // mergeExcelFiles combines multiple Excel files into a single output file
 func mergeExcelFiles(opts MergeOptions) error {
-	// Track temporary files for cleanup
-	var tempFiles []string
-	defer cleanupTempFiles(tempFiles)
-
-	// Preprocess: Convert any .xls files to .xlsx
-	processedFiles := make([]string, 0, len(opts.InputFiles))
-	for _, inputFile := range opts.InputFiles {
-		if strings.ToLower(filepath.Ext(inputFile)) == ".xls" {
-			// Convert .xls to .xlsx
-			convertedPath, err := convertXLStoXLSX(inputFile)
-			if err != nil {
-				return fmt.Errorf("failed to convert %s: %w", inputFile, err)
-			}
-			processedFiles = append(processedFiles, convertedPath)
-			tempFiles = append(tempFiles, convertedPath)
-		} else {
-			// Use .xlsx file as-is
-			processedFiles = append(processedFiles, inputFile)
-		}
-	}
-
 	// Create a new Excel file for output
 	output := excelize.NewFile()
 	defer output.Close()
@@ -54,7 +31,7 @@ func mergeExcelFiles(opts MergeOptions) error {
 	isFirstFile := true
 
 	// Process each input file
-	for fileIdx, inputFile := range processedFiles {
+	for fileIdx, inputFile := range opts.InputFiles {
 		// Display original filename for user feedback
 		originalFile := opts.InputFiles[fileIdx]
 		fmt.Printf("Processing file %d/%d: %s\n", fileIdx+1, len(opts.InputFiles), originalFile)
@@ -95,41 +72,65 @@ func mergeExcelFiles(opts MergeOptions) error {
 		// Write rows to output
 		startRow := currentRow
 
-		// Determine which rows to process
-		var rowsToProcess [][]string
+		// Determine which rows to process and track source row indices
+		var startRowIdx, endRowIdx int
 		if opts.StartRow > 0 {
 			// User specified a start row
-			if isFirstFile {
-				// For first file, include rows from StartRow onwards
-				if opts.StartRow <= len(rows) {
-					rowsToProcess = rows[opts.StartRow-1:]
-				}
+			if opts.StartRow <= len(rows) {
+				startRowIdx = opts.StartRow - 1
+				endRowIdx = len(rows)
 			} else {
-				// For subsequent files, skip to StartRow (assumes same structure)
-				if opts.StartRow <= len(rows) {
-					rowsToProcess = rows[opts.StartRow-1:]
-				}
+				f.Close()
+				continue
 			}
 		} else {
 			// Default behavior: use all rows, skip header for subsequent files
-			if !isFirstFile {
-				// Skip header row for subsequent files (assuming first row is header)
-				if len(rows) > 0 {
-					rowsToProcess = rows[1:]
-				}
+			if !isFirstFile && len(rows) > 0 {
+				startRowIdx = 1 // Skip header row
 			} else {
-				rowsToProcess = rows
+				startRowIdx = 0
 			}
+			endRowIdx = len(rows)
 		}
 
-		for _, row := range rowsToProcess {
-			for colIdx, cellValue := range row {
-				cell, err := excelize.CoordinatesToCellName(colIdx+1, currentRow)
+		// Process each row
+		for sourceRowIdx := startRowIdx; sourceRowIdx < endRowIdx; sourceRowIdx++ {
+			row := rows[sourceRowIdx]
+			for colIdx := range row {
+				// Get source cell coordinates (1-indexed)
+				sourceCell, err := excelize.CoordinatesToCellName(colIdx+1, sourceRowIdx+1)
 				if err != nil {
 					f.Close()
-					return fmt.Errorf("failed to convert coordinates: %w", err)
+					return fmt.Errorf("failed to convert source coordinates: %w", err)
 				}
-				if err := output.SetCellValue(outputSheetName, cell, cellValue); err != nil {
+
+				// Get destination cell coordinates
+				destCell, err := excelize.CoordinatesToCellName(colIdx+1, currentRow)
+				if err != nil {
+					f.Close()
+					return fmt.Errorf("failed to convert dest coordinates: %w", err)
+				}
+
+				// Get the cell type to preserve formatting
+				cellType, err := f.GetCellType(sheetName, sourceCell)
+				if err == nil && cellType != excelize.CellTypeUnset {
+					// Get cell style
+					styleID, err := f.GetCellStyle(sheetName, sourceCell)
+					if err == nil && styleID != 0 {
+						// Copy the style to output
+						output.SetCellStyle(outputSheetName, destCell, destCell, styleID)
+					}
+				}
+
+				// Get and set cell value
+				cellValue, err := f.GetCellValue(sheetName, sourceCell)
+				if err != nil {
+					f.Close()
+					return fmt.Errorf("failed to get cell value: %w", err)
+				}
+
+				// Set the cell value
+				if err := output.SetCellValue(outputSheetName, destCell, cellValue); err != nil {
 					f.Close()
 					return fmt.Errorf("failed to set cell value: %w", err)
 				}
