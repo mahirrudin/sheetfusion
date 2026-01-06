@@ -121,13 +121,13 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ## Features
 
-- [x] **Single file conversion** - Convert one file at a time
-- [x] **Batch conversion** - Convert entire directories
-- [x] **Custom output names** - Specify output filename
-- [x] **Auto-naming** - Automatically generates .xlsx filename
-- [x] **Error handling** - Clear error messages
-- [x] **Progress reporting** - Shows conversion status
-- [x] **Dependency checking** - Verifies required software is installed
+✅ **Single file conversion** - Convert one file at a time
+✅ **Batch conversion** - Convert entire directories
+✅ **Custom output names** - Specify output filename
+✅ **Auto-naming** - Automatically generates .xlsx filename
+✅ **Error handling** - Clear error messages
+✅ **Progress reporting** - Shows conversion status
+✅ **Dependency checking** - Verifies required software is installed
 
 ---
 

@@ -113,12 +113,22 @@ func mergeExcelFiles(opts MergeOptions) error {
 
 				// Get the cell type to preserve formatting
 				cellType, err := f.GetCellType(sheetName, sourceCell)
+				var sourceStyle *excelize.Style
+
 				if err == nil && cellType != excelize.CellTypeUnset {
-					// Get cell style
-					styleID, err := f.GetCellStyle(sheetName, sourceCell)
-					if err == nil && styleID != 0 {
-						// Copy the style to output
-						output.SetCellStyle(outputSheetName, destCell, destCell, styleID)
+					// Get cell style from source
+					sourceStyleID, err := f.GetCellStyle(sheetName, sourceCell)
+					if err == nil && sourceStyleID != 0 {
+						// Get the actual style object from source
+						sourceStyle, err = f.GetStyle(sourceStyleID)
+						if err == nil && sourceStyle != nil {
+							// Create a new style in the output workbook with the same properties
+							newStyleID, err := output.NewStyle(sourceStyle)
+							if err == nil {
+								// Apply the new style to the destination cell
+								output.SetCellStyle(outputSheetName, destCell, destCell, newStyleID)
+							}
+						}
 					}
 				}
 
@@ -129,7 +139,23 @@ func mergeExcelFiles(opts MergeOptions) error {
 					return fmt.Errorf("failed to get cell value: %w", err)
 				}
 
-				// Set the cell value
+				// Check if we should convert currency text to number
+				if sourceStyle != nil && sourceStyle.CustomNumFmt != nil {
+					customFmt := *sourceStyle.CustomNumFmt
+					if shouldConvertToNumber(int(cellType), customFmt, cellValue) {
+						// Parse currency text and set as number
+						if numValue, ok := parseCurrencyText(cellValue); ok {
+							if err := output.SetCellValue(outputSheetName, destCell, numValue); err != nil {
+								f.Close()
+								return fmt.Errorf("failed to set cell value: %w", err)
+							}
+							// Don't set the text value - we already set the numeric value
+							continue
+						}
+					}
+				}
+
+				// Set the cell value as-is (for non-currency or if parsing failed)
 				if err := output.SetCellValue(outputSheetName, destCell, cellValue); err != nil {
 					f.Close()
 					return fmt.Errorf("failed to set cell value: %w", err)
